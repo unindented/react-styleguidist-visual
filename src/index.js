@@ -7,6 +7,11 @@ const { debug, spinner } = require('./utils/debug')
 
 const validate = promisify(joi.validate)
 
+const commonDefaults = {
+  dir: 'styleguide-visual',
+  filter: undefined
+}
+
 const testSchema = joi.object().keys({
   url: joi.string().required(),
   sandbox: joi.boolean(),
@@ -31,16 +36,10 @@ const testSchema = joi.object().keys({
   )
 })
 
-const approveSchema = joi.object().keys({
-  dir: joi.string(),
-  filter: joi.string()
-})
-
-const defaults = {
+const testDefaults = {
+  ...commonDefaults,
   url: undefined,
   sandbox: true,
-  dir: 'styleguide-visual',
-  filter: undefined,
   threshold: 0.001,
   viewports: {
     desktop: {
@@ -50,12 +49,22 @@ const defaults = {
   }
 }
 
+const approveSchema = joi.object().keys({
+  dir: joi.string(),
+  filter: joi.string()
+})
+
+const approveDefaults = {
+  ...commonDefaults
+}
+
 async function test (options) {
   let browser
 
   try {
     const { url, sandbox, dir, filter, threshold, viewports } = await getOptions(
       options,
+      testDefaults,
       testSchema
     )
     const args = sandbox ? [] : ['--no-sandbox', '--disable-setuid-sandbox']
@@ -84,7 +93,7 @@ async function test (options) {
 
 async function approve (options) {
   try {
-    const { dir } = await getOptions(options, approveSchema)
+    const { dir } = await getOptions(options, approveDefaults, approveSchema)
 
     await promoteNewScreenshots(dir)
   } catch (err) {
@@ -93,7 +102,7 @@ async function approve (options) {
   }
 }
 
-async function getOptions (options, schema) {
+async function getOptions (options, defaults, schema) {
   const optionsWithDefaults = Object.assign({}, defaults, options)
   return validate(optionsWithDefaults, schema)
 }
