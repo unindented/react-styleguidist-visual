@@ -11,7 +11,6 @@ const { debug } = require('./debug')
 const move = promisify(fs.move)
 const pathExists = promisify(fs.pathExists)
 const glob = promisify(globby)
-const noop = () => {}
 
 async function compareNewScreenshotsToRefScreenshots (dir, threshold) {
   const newImgs = await glob(path.join(dir, '*.new.png'))
@@ -34,7 +33,11 @@ async function compareNewScreenshotsToRefScreenshots (dir, threshold) {
           chalk.cyan(refImg),
           chalk.red(pixels)
         )
-        termImg(diffImg, { fallback: noop })
+        termImg(diffImg, {
+          fallback: () => {
+            console.log('Check out the diff at %s', chalk.cyan(diffImg))
+          }
+        })
         diffCount++
       }
     }
