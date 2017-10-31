@@ -20,6 +20,10 @@ function testArgs (yargs) {
       type: 'string',
       requiresArg: true
     })
+    .option('sandbox', {
+      type: 'boolean',
+      description: 'Run Puppeteer in a sandbox'
+    })
     .option('dir', {
       type: 'string',
       description: 'Directory where screenshots are stored',
@@ -28,6 +32,11 @@ function testArgs (yargs) {
     .option('filter', {
       type: 'array',
       description: 'Only collect screenshots for these components',
+      requiresArg: true
+    })
+    .option('threshold', {
+      type: 'number',
+      description: 'Threshold for visual diffing',
       requiresArg: true
     })
     .demandOption(['url'])
@@ -61,8 +70,8 @@ function approveArgs (yargs) {
 }
 
 function testCommand (argv) {
-  const { url, dir, filter } = argv
-  const options = cleanup({ url, dir, filter })
+  const { url, sandbox, dir, filter, threshold } = argv
+  const options = cleanup({ url, sandbox, dir, filter, threshold })
   test(options).catch(err => {
     console.log(err.message)
     process.exit(1)

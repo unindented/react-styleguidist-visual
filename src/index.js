@@ -9,13 +9,26 @@ const validate = promisify(joi.validate)
 
 const testSchema = joi.object().keys({
   url: joi.string().required(),
+  sandbox: joi.boolean(),
   dir: joi.string(),
   filter: joi.array().items(joi.string()),
-  viewports: joi.object().pattern(/^.+$/, joi.object().keys({
-    width: joi.number().integer().min(1),
-    height: joi.number().integer().min(1)
-  })),
-  threshold: joi.number().min(0).max(1)
+  threshold: joi
+    .number()
+    .min(0)
+    .max(1),
+  viewports: joi.object().pattern(
+    /^.+$/,
+    joi.object().keys({
+      width: joi
+        .number()
+        .integer()
+        .min(1),
+      height: joi
+        .number()
+        .integer()
+        .min(1)
+    })
+  )
 })
 
 const approveSchema = joi.object().keys({
@@ -25,24 +38,29 @@ const approveSchema = joi.object().keys({
 
 const defaults = {
   url: undefined,
+  sandbox: true,
   dir: 'styleguide-visual',
   filter: undefined,
+  threshold: 0.001,
   viewports: {
     desktop: {
       width: 800,
       height: 600
     }
-  },
-  threshold: 0.001
+  }
 }
 
 async function test (options) {
   let browser
 
   try {
-    const { url, dir, filter, viewports, threshold } = await getOptions(options, testSchema)
+    const { url, sandbox, dir, filter, threshold, viewports } = await getOptions(
+      options,
+      testSchema
+    )
+    const args = sandbox ? [] : ['--no-sandbox', '--disable-setuid-sandbox']
 
-    browser = await puppeteer.launch()
+    browser = await puppeteer.launch({ args })
     const page = await browser.newPage()
 
     for (const viewport of Object.keys(viewports)) {
