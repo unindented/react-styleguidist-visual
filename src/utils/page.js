@@ -6,20 +6,20 @@ const { debug } = require('./debug')
 
 const ensureDir = promisify(fs.ensureDir)
 
-async function getPreviews (page, url, filter, viewport) {
-  await goToUrl(page, url)
+async function getPreviews (page, { url, filter, viewport, navigationOptions }) {
+  await goToUrl(page, url, navigationOptions)
 
-  return page.evaluate(getPreviewsInPage, filter, viewport)
+  return page.evaluate(getPreviewsInPage, { filter, viewport })
 }
 
-function getPreviewsInPage (filters, viewport) {
+function getPreviewsInPage ({ filter, viewport }) {
   const shouldIncludePreview = (name) => {
-    if (filters == null) {
+    if (filter == null) {
       return true
     }
 
-    return filters.some((filter) => {
-      const regexp = new RegExp(filter.toLowerCase())
+    return [].concat(filter).some((str) => {
+      const regexp = new RegExp(str.toLowerCase())
       return regexp.test(name.toLowerCase())
     })
   }
@@ -46,7 +46,7 @@ function getPreviewsInPage (filters, viewport) {
   return Array.prototype.reduce.call(result, extractPreviewInfo, {})
 }
 
-async function takeNewScreenshotsOfPreviews (page, dir, previewMap) {
+async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, navigationOptions }) {
   await ensureDir(dir)
 
   for (const name of Object.keys(previewMap)) {
@@ -56,13 +56,13 @@ async function takeNewScreenshotsOfPreviews (page, dir, previewMap) {
     for (const preview of previewList) {
       const { url } = preview
       await goToHashUrl(page, url)
-      await reload(page)
-      await takeNewScreenshotOfPreview(page, dir, preview, ++index)
+      await reload(page, navigationOptions)
+      await takeNewScreenshotOfPreview(page, preview, ++index, { dir })
     }
   }
 }
 
-async function takeNewScreenshotOfPreview (page, dir, preview, index) {
+async function takeNewScreenshotOfPreview (page, preview, index, { dir }) {
   const { name, description, viewport } = preview
   const basename = `${name} ${description || index} ${viewport}`.replace(/[^0-9A-Z]+/gi, '_')
   const relativePath = path.join(dir, `${basename}.new.png`)
@@ -76,9 +76,9 @@ async function takeNewScreenshotOfPreview (page, dir, preview, index) {
   await page.screenshot({ clip, path: relativePath })
 }
 
-async function goToUrl (page, url) {
+async function goToUrl (page, url, navigationOptions) {
   debug('Navigating to URL %s', chalk.blue(url))
-  return page.goto(url, { waitUntil: 'networkidle' })
+  return page.goto(url, navigationOptions)
 }
 
 async function goToHashUrl (page, url) {
@@ -88,9 +88,9 @@ async function goToHashUrl (page, url) {
   }, url)
 }
 
-async function reload (page) {
+async function reload (page, navigationOptions) {
   debug('Reloading')
-  return page.reload({ waitUntil: 'networkidle' })
+  return page.reload(navigationOptions)
 }
 
 module.exports = {

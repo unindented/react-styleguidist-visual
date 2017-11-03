@@ -20,10 +20,6 @@ function testArgs (yargs) {
       type: 'string',
       requiresArg: true
     })
-    .option('sandbox', {
-      type: 'boolean',
-      description: 'Run Puppeteer in a sandbox'
-    })
     .option('dir', {
       type: 'string',
       description: 'Directory where screenshots are stored',
@@ -70,28 +66,15 @@ function approveArgs (yargs) {
 }
 
 function testCommand (argv) {
-  const { url, sandbox, dir, filter, threshold } = argv
-  const options = cleanup({ url, sandbox, dir, filter, threshold })
-  test(options).catch(err => {
+  test(argv).catch(err => {
     console.log(err.message)
     process.exit(1)
   })
 }
 
 function approveCommand (argv) {
-  const { dir, filter } = argv
-  const options = cleanup({ dir, filter })
-  approve(options).catch(err => {
+  approve(argv).catch(err => {
     console.log(err.message)
     process.exit(1)
   })
-}
-
-function cleanup (obj) {
-  for (const key of Object.keys(obj)) {
-    if (obj[key] === undefined) {
-      delete obj[key]
-    }
-  }
-  return obj
 }

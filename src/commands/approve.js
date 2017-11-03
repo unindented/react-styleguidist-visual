@@ -3,21 +3,25 @@ const { getOptions } = require('../utils/options')
 const { promoteNewScreenshots } = require('../utils/image')
 const { debug } = require('../utils/debug')
 
-const approveSchema = joi.object().keys({
-  dir: joi.string(),
-  filter: joi.string()
-})
+const approveSchema = joi
+  .object()
+  .unknown()
+  .keys({
+    dir: joi.string(),
+    filter: joi.array().items(joi.string())
+  })
 
 const approveDefaults = {
   dir: 'styleguide-visual',
   filter: undefined
 }
 
-async function approve (options) {
+async function approve (partialOptions) {
   try {
-    const { dir } = await getOptions(options, approveDefaults, approveSchema)
+    const options = await getOptions(partialOptions, approveDefaults, approveSchema)
+    const { dir, filter } = options
 
-    await promoteNewScreenshots(dir)
+    await promoteNewScreenshots({ dir, filter })
   } catch (err) {
     debug(err)
     throw err

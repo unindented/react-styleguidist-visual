@@ -12,8 +12,8 @@ const move = promisify(fs.move)
 const pathExists = promisify(fs.pathExists)
 const glob = promisify(globby)
 
-async function compareNewScreenshotsToRefScreenshots (dir, threshold) {
-  const newImgs = await glob(path.join(dir, '*.new.png'))
+async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }) {
+  const newImgs = await glob(path.join(dir, `${filter || ''}*.new.png`))
 
   let diffCount = 0
 
@@ -48,8 +48,8 @@ async function compareNewScreenshotsToRefScreenshots (dir, threshold) {
   }
 }
 
-async function promoteNewScreenshots (dir) {
-  const newImgs = await glob(path.join(dir, '*.new.png'))
+async function promoteNewScreenshots ({ dir, filter }) {
+  const newImgs = await glob(path.join(dir, `${filter || ''}*.new.png`))
 
   for (const newImg of newImgs) {
     await promoteNewScreenshot(newImg)

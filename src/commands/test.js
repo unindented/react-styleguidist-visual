@@ -5,29 +5,40 @@ const { compareNewScreenshotsToRefScreenshots } = require('../utils/image')
 const { getPreviews, takeNewScreenshotsOfPreviews } = require('../utils/page')
 const { debug, spinner } = require('../utils/debug')
 
-const testSchema = joi.object().keys({
-  url: joi.string().required(),
-  sandbox: joi.boolean(),
-  dir: joi.string(),
-  filter: joi.array().items(joi.string()),
-  threshold: joi
-    .number()
-    .min(0)
-    .max(1),
-  viewports: joi.object().pattern(
-    /^.+$/,
-    joi.object().keys({
-      width: joi
-        .number()
-        .integer()
-        .min(1),
-      height: joi
-        .number()
-        .integer()
-        .min(1)
-    })
-  )
-})
+const testSchema = joi
+  .object()
+  .unknown()
+  .keys({
+    url: joi.string().required(),
+    dir: joi.string(),
+    filter: joi.array().items(joi.string()),
+    threshold: joi
+      .number()
+      .min(0)
+      .max(1),
+    viewports: joi.object().pattern(
+      /^.+$/,
+      joi.object().keys({
+        width: joi
+          .number()
+          .integer()
+          .min(1),
+        height: joi
+          .number()
+          .integer()
+          .min(1),
+        deviceScaleFactor: joi
+          .number()
+          .integer()
+          .min(1),
+        isMobile: joi.boolean(),
+        hasTouch: joi.boolean(),
+        isLandscape: joi.boolean()
+      })
+    ),
+    launchOptions: joi.object(),
+    navigationOptions: joi.object()
+  })
 
 const testDefaults = {
   url: undefined,
@@ -38,34 +49,33 @@ const testDefaults = {
   viewports: {
     desktop: {
       width: 800,
-      height: 600
+      height: 600,
+      deviceScaleFactor: 1
     }
-  }
+  },
+  launchOptions: {},
+  navigationOptions: {}
 }
 
-async function test (options) {
+async function test (partialOptions) {
   let browser
 
   try {
-    const { url, sandbox, dir, filter, threshold, viewports } = await getOptions(
-      options,
-      testDefaults,
-      testSchema
-    )
-    const args = sandbox ? [] : ['--no-sandbox', '--disable-setuid-sandbox']
+    const options = await getOptions(partialOptions, testDefaults, testSchema)
+    const { url, dir, filter, threshold, viewports, launchOptions, navigationOptions } = options
 
-    browser = await puppeteer.launch({ args })
+    browser = await puppeteer.launch(launchOptions)
     const page = await browser.newPage()
 
     for (const viewport of Object.keys(viewports)) {
       const viewportSpinner = spinner(`Taking screenshots for viewport ${viewport}`).start()
       await page.setViewport(viewports[viewport])
-      const previews = await getPreviews(page, url, filter, viewport)
-      await takeNewScreenshotsOfPreviews(page, dir, previews)
+      const previews = await getPreviews(page, { url, filter, viewport, navigationOptions })
+      await takeNewScreenshotsOfPreviews(page, previews, { dir, navigationOptions })
       viewportSpinner.stop()
     }
 
-    await compareNewScreenshotsToRefScreenshots(dir, threshold)
+    await compareNewScreenshotsToRefScreenshots({ dir, filter, threshold })
   } catch (err) {
     debug(err)
     throw err
