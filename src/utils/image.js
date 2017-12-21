@@ -12,14 +12,14 @@ const move = promisify(fs.move)
 const pathExists = promisify(fs.pathExists)
 const glob = promisify(globby)
 
-function filterOnRegex (filter) {
+function filterFiles (filter) {
   if (!filter) { return array => array }
   const filterRegex = new RegExp(filter)
   return array => array.filter(value => filterRegex.test(value))
 }
 
 async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }) {
-  const newImgs = filterOnRegex(filter)(await glob(path.join(dir, `*.new.png`)))
+  const newImgs = filterFiles(filter)(await glob(path.join(dir, `*.new.png`)))
 
   let diffCount = 0
 
@@ -55,7 +55,7 @@ async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }
 }
 
 async function promoteNewScreenshots ({ dir, filter }) {
-  const newImgs = filterOnRegex(filter)(await glob(path.join(dir, `*.new.png`)))
+  const newImgs = filterFiles(filter)(await glob(path.join(dir, `*.new.png`)))
 
   for (const newImg of newImgs) {
     await promoteNewScreenshot(newImg)
