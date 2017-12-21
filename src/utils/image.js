@@ -13,9 +13,9 @@ const pathExists = promisify(fs.pathExists)
 const glob = promisify(globby)
 
 function filterOnRegex (filter) {
-  if (!filter) { return array => array; }
-  const filterRegex = new RegExp(filter);
-  return array => array.filter(value => filterRegex.test(value));
+  if (!filter) { return array => array }
+  const filterRegex = new RegExp(filter)
+  return array => array.filter(value => filterRegex.test(value))
 }
 
 async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }) {
