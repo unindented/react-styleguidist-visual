@@ -23,17 +23,14 @@ function testArgs (yargs) {
     .option('dir', {
       type: 'string',
       description: 'Directory where screenshots are stored',
-      requiresArg: true
     })
     .option('filter', {
       type: 'array',
       description: 'Only collect screenshots for these components',
-      requiresArg: true
     })
     .option('threshold', {
       type: 'number',
       description: 'Threshold for visual diffing',
-      requiresArg: true
     })
     .demandOption(['url'])
     .config('config', configParser)
