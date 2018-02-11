@@ -69,7 +69,8 @@ async function takeNewScreenshotOfPreview (page, preview, index, { dir }) {
 
   const clip = await page.evaluate(() => {
     const el = document.querySelector('[data-preview]')
-    return el.getBoundingClientRect()
+    const { x, y, width, height } = el.getBoundingClientRect()
+    return { x, y, width, height }
   })
 
   debug('Storing screenshot of %s in %s', chalk.blue(name), chalk.cyan(relativePath))

@@ -20,22 +20,23 @@
     "test": "eslint ."
   },
   "dependencies": {
-    "chalk": "^2.3.0",
+    "chalk": "^2.3.1",
     "debug": "^3.1.0",
-    "fs-extra": "^4.0.2",
+    "fs-extra": "^5.0.0",
     "glob": "^7.1.2",
-    "joi": "^13.0.1",
-    "ora": "^1.3.0",
+    "joi": "^13.1.2",
+    "ora": "^1.4.0",
     "pixelmatch": "^4.0.2",
-    "pngjs": "^3.3.0",
-    "puppeteer": "^0.12.0",
+    "pngjs": "^3.3.1",
+    "puppeteer": "^1.0.0",
     "term-img": "^2.1.0",
-    "yargs": "^10.0.3"
+    "yargs": "^11.0.0"
   },
   "devDependencies": {
+    "eslint": "4.17.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1"
   }
