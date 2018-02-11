@@ -13,12 +13,12 @@ async function getPreviews (page, { url, filter, viewport, navigationOptions }) 
 }
 
 function getPreviewsInPage ({ filter, viewport }) {
-  const shouldIncludePreview = (name) => {
+  const shouldIncludePreview = name => {
     if (filter == null) {
       return true
     }
 
-    return [].concat(filter).some((str) => {
+    return [].concat(filter).some(str => {
       const regexp = new RegExp(str.toLowerCase())
       return regexp.test(name.toLowerCase())
     })

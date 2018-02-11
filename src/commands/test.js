@@ -1,7 +1,11 @@
 const joi = require('joi')
 const puppeteer = require('puppeteer')
 const { getOptions } = require('../utils/options')
-const { compareNewScreenshotsToRefScreenshots, removeNonRefScreenshots } = require('../utils/image')
+const {
+  checkForStaleRefScreenshots,
+  compareNewScreenshotsToRefScreenshots,
+  removeNonRefScreenshots
+} = require('../utils/image')
 const { getPreviews, takeNewScreenshotsOfPreviews } = require('../utils/page')
 const { debug, spinner } = require('../utils/debug')
 
@@ -77,6 +81,7 @@ async function test (partialOptions) {
       viewportSpinner.stop()
     }
 
+    await checkForStaleRefScreenshots({ dir, filter })
     await compareNewScreenshotsToRefScreenshots({ dir, filter, threshold })
   } catch (err) {
     debug(err)
