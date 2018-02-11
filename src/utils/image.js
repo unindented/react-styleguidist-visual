@@ -10,7 +10,7 @@ const { debug } = require('./debug')
 
 const move = promisify(fs.move)
 const pathExists = promisify(fs.pathExists)
-const unlink = promisify(fs.unlink)
+const remove = promisify(fs.remove)
 const glob = promisify(globby)
 
 async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }) {
@@ -58,7 +58,7 @@ async function promoteNewScreenshots ({ dir, filter }) {
   }
 
   for (const oldDiff of oldDiffs) {
-    await deleteDiff(oldDiff)
+    await remove(oldDiff)
   }
 }
 
@@ -68,10 +68,6 @@ async function promoteNewScreenshot (newImg) {
   debug('Promoting screenshot from %s to %s', chalk.cyan(newImg), chalk.cyan(refImg))
 
   return move(newImg, refImg, { overwrite: true })
-}
-
-async function deleteDiff (oldDiff) {
-  return unlink(oldDiff)
 }
 
 async function diffScreenshots (img1, img2, output, threshold = 0.001) {
@@ -113,7 +109,16 @@ async function readScreenshot (img) {
   })
 }
 
+async function removeNonRefScreenshots ({ dir, filter }) {
+  const nonRefImgs = await glob(path.join(dir, `${filter || ''}*.{diff,new}.png`))
+
+  for (const nonRefImg of nonRefImgs) {
+    await remove(nonRefImg)
+  }
+}
+
 module.exports = {
   compareNewScreenshotsToRefScreenshots,
-  promoteNewScreenshots
+  promoteNewScreenshots,
+  removeNonRefScreenshots
 }
