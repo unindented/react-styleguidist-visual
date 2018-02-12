@@ -27,7 +27,7 @@ function getPreviewsInPage ({ filter, viewport }) {
   const extractPreviewInfo = (memo, el) => {
     const url = el.nextSibling.querySelector('a[href][title]').href
     const name = el.dataset.preview
-    const description = el.dataset.example
+    const description = el.dataset.description
 
     if (!shouldIncludePreview(name)) {
       return memo
@@ -72,8 +72,8 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
 }
 
 async function takeNewScreenshotOfPreview (page, preview, index, { dir }) {
-  const { name, description, viewport } = preview
-  const basename = `${name} ${description || index} ${viewport}`.replace(/[^0-9A-Z]+/gi, '_')
+  const { name, description = `${index}`, viewport } = preview
+  const basename = `${name} ${description.toLowerCase()} ${viewport.toLowerCase()}`.replace(/[^0-9A-Z]+/gi, '_')
   const relativePath = path.join(dir, `${basename}.new.png`)
 
   const clip = await page.evaluate(() => {
