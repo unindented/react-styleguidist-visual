@@ -3,18 +3,22 @@ const chalk = require('chalk')
 const ora = require('ora')
 const { format } = require('util')
 
-const fakeOra = () => {
-  const fake = {}
-  fake.start = () => fake
-  fake.stop = () => fake
-  return fake
-}
+const spinner = ({ start, update, stop }) => {
+  const instance = ora({ color: 'white', text: start, enabled: debug.enabled ? false : undefined })
 
-const spinner = text => {
-  if (debug.enabled) {
-    return fakeOra()
+  return {
+    start: () => {
+      instance.text = start
+      instance.start()
+    },
+    update: (curr, total) => {
+      instance.text = format(update, curr, total)
+    },
+    stop: () => {
+      instance.text = stop
+      instance.stop()
+    }
   }
-  return ora({ color: 'white', text })
 }
 
 const info = (text, ...args) => {

@@ -74,11 +74,16 @@ async function test (partialOptions) {
     const page = await browser.newPage()
 
     for (const viewport of Object.keys(viewports)) {
-      const viewportSpinner = spinner(`Taking screenshots for viewport ${viewport}`).start()
+      const progress = spinner({
+        start: `Taking screenshots for viewport ${viewport}`,
+        update: `Taking screenshot %s of %s for viewport ${viewport}`,
+        stop: `Finished taking screenshots for viewport ${viewport}`
+      })
+      progress.start()
       await page.setViewport(viewports[viewport])
       const previews = await getPreviews(page, { url, filter, viewport, navigationOptions })
-      await takeNewScreenshotsOfPreviews(page, previews, { dir, navigationOptions })
-      viewportSpinner.stop()
+      await takeNewScreenshotsOfPreviews(page, previews, { dir, progress, navigationOptions })
+      progress.stop()
     }
 
     await checkForStaleRefScreenshots({ dir, filter })

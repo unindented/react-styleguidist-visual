@@ -46,18 +46,27 @@ function getPreviewsInPage ({ filter, viewport }) {
   return Array.prototype.reduce.call(result, extractPreviewInfo, {})
 }
 
-async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, navigationOptions }) {
+async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, navigationOptions }) {
   await ensureDir(dir)
+
+  let progressIndex = 1
+  const progressTotal = Object.keys(previewMap).reduce((memo, name) => memo + previewMap[name].length, 0)
 
   for (const name of Object.keys(previewMap)) {
     const previewList = previewMap[name]
 
-    let index = 0
+    let previewIndex = 1
+
     for (const preview of previewList) {
+      progress.update(progressIndex, progressTotal)
+
       const { url } = preview
       await goToHashUrl(page, url)
       await reload(page, navigationOptions)
-      await takeNewScreenshotOfPreview(page, preview, ++index, { dir })
+      await takeNewScreenshotOfPreview(page, preview, previewIndex, { dir })
+
+      previewIndex += 1
+      progressIndex += 1
     }
   }
 }
