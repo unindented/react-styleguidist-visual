@@ -62,7 +62,6 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
 
       const { url } = preview
       await goToHashUrl(page, url)
-      await reload(page, navigationOptions)
       await takeNewScreenshotOfPreview(page, preview, previewIndex, { dir })
 
       previewIndex += 1
@@ -96,11 +95,6 @@ async function goToHashUrl (page, url) {
   return page.evaluate(url => {
     window.location.href = url
   }, url)
-}
-
-async function reload (page, navigationOptions) {
-  debug('Reloading')
-  return page.reload(navigationOptions)
 }
 
 module.exports = {
