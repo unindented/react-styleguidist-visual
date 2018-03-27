@@ -25,7 +25,6 @@ function getPreviewsInPage ({ filter, viewport }) {
   }
 
   const extractPreviewInfo = (memo, el) => {
-    const url = el.nextSibling.querySelector('a[href][title]').href
     const name = el.dataset.preview
     const description = el.dataset.description
 
@@ -34,7 +33,6 @@ function getPreviewsInPage ({ filter, viewport }) {
     }
 
     memo[name] = (memo[name] || []).concat({
-      url,
       name,
       description,
       viewport
@@ -43,7 +41,7 @@ function getPreviewsInPage ({ filter, viewport }) {
   }
 
   const result = document.querySelectorAll('[data-preview]')
-  return Array.prototype.reduce.call(result, extractPreviewInfo, {})
+  return Array.from(result).reduce(extractPreviewInfo, {})
 }
 
 async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, navigationOptions }) {
@@ -60,8 +58,6 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
     for (const preview of previewList) {
       progress.update(progressIndex, progressTotal)
 
-      const { url } = preview
-      await goToHashUrl(page, url)
       await takeNewScreenshotOfPreview(page, preview, previewIndex, { dir })
 
       previewIndex += 1
@@ -75,11 +71,20 @@ async function takeNewScreenshotOfPreview (page, preview, index, { dir }) {
   const basename = `${name} ${description.toLowerCase()} ${viewport.toLowerCase()}`.replace(/[^0-9A-Z]+/gi, '_')
   const relativePath = path.join(dir, `${basename}.new.png`)
 
-  const clip = await page.evaluate(() => {
-    const el = document.querySelector('[data-preview]')
+  const clip = await page.evaluate((name, index) => {
+    const el = document.querySelectorAll(`[data-preview="${name}"]`)[index - 1]
+
+    // find nearest scrollable ancestor
+    let scrollContainer = el
+    // eslint-disable-next-line no-undef
+    while (getComputedStyle(scrollContainer).overflowY !== 'auto' && scrollContainer) {
+      scrollContainer = scrollContainer.parentElement
+    }
     const { x, y, width, height } = el.getBoundingClientRect()
-    return { x, y, width, height }
-  })
+    scrollContainer.scrollTop += y
+
+    return { x, y: 0, width, height }
+  }, name, index)
 
   debug('Storing screenshot of %s in %s', chalk.blue(name), chalk.cyan(relativePath))
   await page.screenshot({ clip, path: relativePath })
@@ -88,13 +93,6 @@ async function takeNewScreenshotOfPreview (page, preview, index, { dir }) {
 async function goToUrl (page, url, navigationOptions) {
   debug('Navigating to URL %s', chalk.blue(url))
   return page.goto(url, navigationOptions)
-}
-
-async function goToHashUrl (page, url) {
-  debug('Navigating to hash URL %s', chalk.blue(url))
-  return page.evaluate(url => {
-    window.location.href = url
-  }, url)
 }
 
 module.exports = {
