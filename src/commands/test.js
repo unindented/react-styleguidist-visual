@@ -41,6 +41,7 @@ const testSchema = joi
       })
     ),
     launchOptions: joi.object(),
+    connectOptions: joi.object(),
     navigationOptions: joi.object()
   })
 
@@ -58,19 +59,21 @@ const testDefaults = {
     }
   },
   launchOptions: {},
+  connectOptions: undefined,
   navigationOptions: {}
 }
 
 async function test (partialOptions) {
   let browser
+  const useConnect = partialOptions.connectOptions !== undefined
 
   try {
     const options = await getOptions(partialOptions, testDefaults, testSchema)
-    const { url, dir, filter, threshold, viewports, launchOptions, navigationOptions } = options
+    const { url, dir, filter, threshold, viewports, launchOptions, connectOptions, navigationOptions } = options
 
     await removeNonRefScreenshots({ dir, filter })
 
-    browser = await puppeteer.launch(launchOptions)
+    browser = useConnect ? await puppeteer.connect(connectOptions) : await puppeteer.launch(launchOptions)
     const page = await browser.newPage()
 
     for (const viewport of Object.keys(viewports)) {
@@ -92,7 +95,7 @@ async function test (partialOptions) {
     debug(err)
     throw err
   } finally {
-    if (browser != null) {
+    if (useConnect === false && browser != null) {
       await browser.close()
     }
   }
