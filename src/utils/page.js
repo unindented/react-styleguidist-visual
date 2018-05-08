@@ -13,12 +13,12 @@ async function getPreviews (page, { url, filter, viewport, navigationOptions }) 
 }
 
 function getPreviewsInPage ({ filter, viewport }) {
-  const shouldIncludePreview = (name) => {
+  const shouldIncludePreview = name => {
     if (filter == null) {
       return true
     }
 
-    return [].concat(filter).some((str) => {
+    return [].concat(filter).some(str => {
       const regexp = new RegExp(str.toLowerCase())
       return regexp.test(name.toLowerCase())
     })
@@ -27,7 +27,7 @@ function getPreviewsInPage ({ filter, viewport }) {
   const extractPreviewInfo = (memo, el) => {
     const url = el.nextSibling.querySelector('a[href][title]').href
     const name = el.dataset.preview
-    const description = el.dataset.example
+    const description = el.dataset.description
 
     if (!shouldIncludePreview(name)) {
       return memo
@@ -46,30 +46,39 @@ function getPreviewsInPage ({ filter, viewport }) {
   return Array.prototype.reduce.call(result, extractPreviewInfo, {})
 }
 
-async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, navigationOptions }) {
+async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, navigationOptions }) {
   await ensureDir(dir)
+
+  let progressIndex = 1
+  const progressTotal = Object.keys(previewMap).reduce((memo, name) => memo + previewMap[name].length, 0)
 
   for (const name of Object.keys(previewMap)) {
     const previewList = previewMap[name]
 
-    let index = 0
+    let previewIndex = 1
+
     for (const preview of previewList) {
+      progress.update(progressIndex, progressTotal)
+
       const { url } = preview
       await goToHashUrl(page, url)
-      await reload(page, navigationOptions)
-      await takeNewScreenshotOfPreview(page, preview, ++index, { dir })
+      await takeNewScreenshotOfPreview(page, preview, previewIndex, { dir })
+
+      previewIndex += 1
+      progressIndex += 1
     }
   }
 }
 
 async function takeNewScreenshotOfPreview (page, preview, index, { dir }) {
-  const { name, description, viewport } = preview
-  const basename = `${name} ${description || index} ${viewport}`.replace(/[^0-9A-Z]+/gi, '_')
+  const { name, description = `${index}`, viewport } = preview
+  const basename = `${name} ${description.toLowerCase()} ${viewport.toLowerCase()}`.replace(/[^0-9A-Z]+/gi, '_')
   const relativePath = path.join(dir, `${basename}.new.png`)
 
   const clip = await page.evaluate(() => {
     const el = document.querySelector('[data-preview]')
-    return el.getBoundingClientRect()
+    const { x, y, width, height } = el.getBoundingClientRect()
+    return { x, y, width, height }
   })
 
   debug('Storing screenshot of %s in %s', chalk.blue(name), chalk.cyan(relativePath))
@@ -86,11 +95,6 @@ async function goToHashUrl (page, url) {
   return page.evaluate(url => {
     window.location.href = url
   }, url)
-}
-
-async function reload (page, navigationOptions) {
-  debug('Reloading')
-  return page.reload(navigationOptions)
 }
 
 module.exports = {

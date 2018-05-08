@@ -22,18 +22,15 @@ function testArgs (yargs) {
     })
     .option('dir', {
       type: 'string',
-      description: 'Directory where screenshots are stored',
-      requiresArg: true
+      description: 'Directory where screenshots are stored'
     })
     .option('filter', {
       type: 'array',
-      description: 'Only collect screenshots for these components',
-      requiresArg: true
+      description: 'Only collect screenshots for these components'
     })
     .option('threshold', {
       type: 'number',
-      description: 'Threshold for visual diffing',
-      requiresArg: true
+      description: 'Threshold for visual diffing'
     })
     .demandOption(['url'])
     .config('config', configParser)
@@ -59,10 +56,7 @@ function approveArgs (yargs) {
     })
     .config('config', configParser)
     .example('$0 approve', '# Approve all new screenshots')
-    .example(
-      '$0 approve --filter "Button"',
-      '# Approve all new screenshots for the "Button" component'
-    )
+    .example('$0 approve --filter "Button"', '# Approve all new screenshots for the "Button" component')
 }
 
 function testCommand (argv) {

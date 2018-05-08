@@ -6,16 +6,40 @@ const globby = require('glob')
 const pixelmatch = require('pixelmatch')
 const { PNG } = require('pngjs')
 const termImg = require('term-img')
-const { debug } = require('./debug')
+const { debug, info, success, failure } = require('./debug')
 
 const move = promisify(fs.move)
 const pathExists = promisify(fs.pathExists)
+const remove = promisify(fs.remove)
 const glob = promisify(globby)
 
 function filterFiles (filter) {
   if (!filter) { return array => array }
   const filterRegex = new RegExp(filter)
   return array => array.filter(value => filterRegex.test(value))
+}
+
+async function checkForStaleRefScreenshots ({ dir, filter }) {
+  const refImgs = filterFiles(filter)(await glob(path.join(dir, `*.new.png`)))
+  await glob(path.join(dir, `${filter || ''}*.png`), {
+    ignore: path.join(dir, `${filter || ''}*.{diff,new}.png`)
+  })
+
+  let hasStaleRefImgs = false
+
+  for (const refImg of refImgs) {
+    const newImg = refImg.replace(/\.png$/, '.new.png')
+
+    const newImgExists = await pathExists(newImg)
+    if (!newImgExists) {
+      hasStaleRefImgs |= true
+      failure('Screenshot %s is stale!', chalk.cyan(refImg))
+    }
+  }
+
+  if (hasStaleRefImgs) {
+    throw new Error('One or more screenshots are stale!')
+  }
 }
 
 async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }) {
@@ -32,16 +56,13 @@ async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }
       await promoteNewScreenshot(newImg)
     } else {
       const pixels = await diffScreenshots(newImg, refImg, diffImg, threshold)
-      if (pixels > 0) {
-        console.log(
-          'Screenshots %s and %s differ in %s pixels',
-          chalk.cyan(newImg),
-          chalk.cyan(refImg),
-          chalk.red(pixels)
-        )
+      if (pixels === 0) {
+        success('Screenshots %s and %s match', chalk.cyan(newImg), chalk.cyan(refImg))
+      } else {
+        failure('Screenshots %s and %s differ in %s pixels', chalk.cyan(newImg), chalk.cyan(refImg), chalk.red(pixels))
         termImg(diffImg, {
           fallback: () => {
-            console.log('Check out the diff at %s', chalk.cyan(diffImg))
+            info('Check out the diff at %s', chalk.cyan(diffImg))
           }
         })
         diffCount++
@@ -56,9 +77,14 @@ async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }
 
 async function promoteNewScreenshots ({ dir, filter }) {
   const newImgs = filterFiles(filter)(await glob(path.join(dir, `*.new.png`)))
+  const oldDiffs = await glob(path.join(dir, `${filter || ''}*.diff.png`))
 
   for (const newImg of newImgs) {
     await promoteNewScreenshot(newImg)
+  }
+
+  for (const oldDiff of oldDiffs) {
+    await remove(oldDiff)
   }
 }
 
@@ -79,12 +105,7 @@ async function diffScreenshots (img1, img2, output, threshold = 0.001) {
     threshold
   })
 
-  debug(
-    'Screenshots %s and %s differ in %s pixels',
-    chalk.cyan(img1),
-    chalk.cyan(img2),
-    chalk.red(pixels)
-  )
+  debug('Screenshots %s and %s differ in %s pixels', chalk.cyan(img1), chalk.cyan(img2), chalk.red(pixels))
 
   return new Promise((resolve, reject) => {
     diff
@@ -109,7 +130,17 @@ async function readScreenshot (img) {
   })
 }
 
+async function removeNonRefScreenshots ({ dir, filter }) {
+  const nonRefImgs = await glob(path.join(dir, `${filter || ''}*.{diff,new}.png`))
+
+  for (const nonRefImg of nonRefImgs) {
+    await remove(nonRefImg)
+  }
+}
+
 module.exports = {
+  checkForStaleRefScreenshots,
   compareNewScreenshotsToRefScreenshots,
-  promoteNewScreenshots
+  promoteNewScreenshots,
+  removeNonRefScreenshots
 }

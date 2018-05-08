@@ -1,7 +1,11 @@
 const joi = require('joi')
 const puppeteer = require('puppeteer')
 const { getOptions } = require('../utils/options')
-const { compareNewScreenshotsToRefScreenshots } = require('../utils/image')
+const {
+  checkForStaleRefScreenshots,
+  compareNewScreenshotsToRefScreenshots,
+  removeNonRefScreenshots
+} = require('../utils/image')
 const { getPreviews, takeNewScreenshotsOfPreviews } = require('../utils/page')
 const { debug, spinner } = require('../utils/debug')
 
@@ -37,6 +41,7 @@ const testSchema = joi
       })
     ),
     launchOptions: joi.object(),
+    connectOptions: joi.object(),
     navigationOptions: joi.object()
   })
 
@@ -54,33 +59,43 @@ const testDefaults = {
     }
   },
   launchOptions: {},
+  connectOptions: undefined,
   navigationOptions: {}
 }
 
 async function test (partialOptions) {
   let browser
+  const useConnect = partialOptions.connectOptions !== undefined
 
   try {
     const options = await getOptions(partialOptions, testDefaults, testSchema)
-    const { url, dir, filter, threshold, viewports, launchOptions, navigationOptions } = options
+    const { url, dir, filter, threshold, viewports, launchOptions, connectOptions, navigationOptions } = options
 
-    browser = await puppeteer.launch(launchOptions)
+    await removeNonRefScreenshots({ dir, filter })
+
+    browser = useConnect ? await puppeteer.connect(connectOptions) : await puppeteer.launch(launchOptions)
     const page = await browser.newPage()
 
     for (const viewport of Object.keys(viewports)) {
-      const viewportSpinner = spinner(`Taking screenshots for viewport ${viewport}`).start()
+      const progress = spinner({
+        start: `Taking screenshots for viewport ${viewport}`,
+        update: `Taking screenshot %s of %s for viewport ${viewport}`,
+        stop: `Finished taking screenshots for viewport ${viewport}`
+      })
+      progress.start()
       await page.setViewport(viewports[viewport])
       const previews = await getPreviews(page, { url, filter, viewport, navigationOptions })
-      await takeNewScreenshotsOfPreviews(page, previews, { dir, navigationOptions })
-      viewportSpinner.stop()
+      await takeNewScreenshotsOfPreviews(page, previews, { dir, progress, navigationOptions })
+      progress.stop()
     }
 
+    await checkForStaleRefScreenshots({ dir, filter })
     await compareNewScreenshotsToRefScreenshots({ dir, filter, threshold })
   } catch (err) {
     debug(err)
     throw err
   } finally {
-    if (browser != null) {
+    if (useConnect === false && browser != null) {
       await browser.close()
     }
   }
