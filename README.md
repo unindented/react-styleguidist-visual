@@ -48,7 +48,7 @@ You can capture screenshots after simulating an action, by providing a selector 
 ```
 
 Available states are `base`, `hover`, `focus`, `click` and `mouseDown`.
-`base` captures the component with without performing an action.
+`base` captures the component without performing an action.
 
 ### Debugging
 
