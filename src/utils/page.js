@@ -29,7 +29,6 @@ function getPreviewsInPage ({ filter, viewport }) {
     const name = el.dataset.preview
     const description = el.dataset.description
     const actionStates = el.dataset.actionStates
-    const actionSelector = el.dataset.actionSelector
 
     if (!shouldIncludePreview(name)) {
       return memo
@@ -40,7 +39,6 @@ function getPreviewsInPage ({ filter, viewport }) {
       name,
       description,
       actionStates,
-      actionSelector,
       viewport
     })
 
@@ -63,7 +61,7 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
     let previewIndex = 1
 
     for (const preview of previewList) {
-      const actionStateList = preview.actionStates ? preview.actionStates.split(',') : ['base']
+      const actionStateList = preview.actionStates ? JSON.parse(preview.actionStates) : [{ action: 'none'}]
 
       progress.update(progressIndex, progressTotal)
 
@@ -82,23 +80,23 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
 
 async function takeNewScreenshotOfPreview (page, preview, index, actionState, { dir }) {
   const { name, description = `${index}`, actionSelector, viewport } = preview
-  const actionStateForFilename = actionState === 'base' ? ' ' : ` ${actionState} `
+  const actionStateForFilename = actionState.action === 'none' ? ' ' : ` ${actionState.action} `
   const basename = `${name} ${description.toLowerCase()}${actionStateForFilename}${viewport.toLowerCase()}`.replace(/[^0-9A-Z]+/gi, '_')
   const relativePath = path.join(dir, `${basename}.new.png`)
 
   const el = await page.$('[data-preview]')
   const boundingBox = await el.boundingBox()
 
-  await triggerAction(page, el, actionState, actionSelector)
+  await triggerAction(page, el, actionState)
 
   debug('Storing screenshot of %s in %s', chalk.blue(name), chalk.cyan(relativePath))
   await page.screenshot({ clip: boundingBox, path: relativePath })
   await resetMouseAndFocus(page)
 }
 
-async function triggerAction(page, el, action, actionSelector) {
-  const actionEl = await (actionSelector ? el.$(actionSelector) : el)
-  switch(action) {
+async function triggerAction(page, el, actionState) {
+  const actionEl = await (actionState.selector ? el.$(actionState.selector) : el)
+  switch(actionState.action) {
     case 'hover':
       await actionEl.hover()
       break

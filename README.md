@@ -40,15 +40,15 @@ $ npx styleguidist-visual approve --help
 
 ### Action States
 
-You can capture screenshots after simulating an action, by providing a selector and list of actions as props to the component wrapper like this:
+You can capture screenshots after simulating an action, by providing a JSON.stringified list of actions as props to the component wrapper like this:
 
 ```
-  ```js { "props": { "data-action-selector": ".my-button", "data-action-states": "base,hover,focus,mouseDown" } }
+  ```js { "props": [{\"action\":\"none\"},{\"action\":\"hover\",\"selector\":\".y-button\"},{\"action\":\"focus\",\"selector\":\".y-button\"}] }
   <button classNames='my-button' />
 ```
 
-Available states are `base`, `hover`, `focus`, `click` and `mouseDown`.
-`base` captures the component without performing an action.
+Available actions are `none`, `hover`, `focus`, `click` and `mouseDown`.
+`none` captures the component without performing an action.
 
 ### Debugging
 
