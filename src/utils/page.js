@@ -28,6 +28,7 @@ function getPreviewsInPage ({ filter, viewport }) {
     const url = el.nextSibling.querySelector('a[href][title]').href
     const name = el.dataset.preview
     const description = el.dataset.description
+    const actionStates = el.dataset.actionStates
 
     if (!shouldIncludePreview(name)) {
       return memo
@@ -37,8 +38,10 @@ function getPreviewsInPage ({ filter, viewport }) {
       url,
       name,
       description,
+      actionStates,
       viewport
     })
+
     return memo
   }
 
@@ -58,31 +61,63 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
     let previewIndex = 1
 
     for (const preview of previewList) {
+      const actionStateList = preview.actionStates ? JSON.parse(preview.actionStates) : [{ action: 'none'}]
+
       progress.update(progressIndex, progressTotal)
 
       const { url } = preview
       await goToHashUrl(page, url)
-      await takeNewScreenshotOfPreview(page, preview, previewIndex, { dir })
 
-      previewIndex += 1
+      for(const actionState of actionStateList) {
+        await takeNewScreenshotOfPreview(page, preview, previewIndex, actionState, { dir })
+        previewIndex += 1
+      }
+
       progressIndex += 1
     }
   }
 }
 
-async function takeNewScreenshotOfPreview (page, preview, index, { dir }) {
-  const { name, description = `${index}`, viewport } = preview
-  const basename = `${name} ${description.toLowerCase()} ${viewport.toLowerCase()}`.replace(/[^0-9A-Z]+/gi, '_')
+async function takeNewScreenshotOfPreview (page, preview, index, actionState, { dir }) {
+  const { name, description = `${index}`, actionSelector, viewport } = preview
+  const actionStateForFilename = actionState.action === 'none' ? ' ' : ` ${actionState.action} `
+  const basename = `${name} ${description.toLowerCase()}${actionStateForFilename}${viewport.toLowerCase()}`.replace(/[^0-9A-Z]+/gi, '_')
   const relativePath = path.join(dir, `${basename}.new.png`)
 
-  const clip = await page.evaluate(() => {
-    const el = document.querySelector('[data-preview]')
-    const { x, y, width, height } = el.getBoundingClientRect()
-    return { x, y, width, height }
-  })
+  const el = await page.$('[data-preview]')
+  const boundingBox = await el.boundingBox()
+
+  await triggerAction(page, el, actionState)
 
   debug('Storing screenshot of %s in %s', chalk.blue(name), chalk.cyan(relativePath))
-  await page.screenshot({ clip, path: relativePath })
+  await page.screenshot({ clip: boundingBox, path: relativePath })
+  await resetMouseAndFocus(page)
+}
+
+async function triggerAction(page, el, actionState) {
+  const actionEl = await (actionState.selector ? el.$(actionState.selector) : el)
+  switch(actionState.action) {
+    case 'hover':
+      await actionEl.hover()
+      break
+    case 'click':
+      await actionEl.click()
+      break
+    case 'mouseDown':
+      const box = await actionEl.boundingBox()
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await page.mouse.down()
+      break
+    case 'focus':
+      await actionEl.focus()
+      break
+  }
+}
+
+async function resetMouseAndFocus(page) {
+  await page.focus('body')
+  await page.mouse.up()
+  await page.mouse.move(0,0)
 }
 
 async function goToUrl (page, url, navigationOptions) {

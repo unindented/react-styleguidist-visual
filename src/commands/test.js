@@ -79,7 +79,7 @@ async function test (partialOptions) {
     for (const viewport of Object.keys(viewports)) {
       const progress = spinner({
         start: `Taking screenshots for viewport ${viewport}`,
-        update: `Taking screenshot %s of %s for viewport ${viewport}`,
+        update: `Taking screenshot of component %s of %s for viewport ${viewport}`,
         stop: `Finished taking screenshots for viewport ${viewport}`
       })
       progress.start()
