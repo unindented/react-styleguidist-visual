@@ -112,6 +112,7 @@ async function triggerAction(page, el, actionState) {
       await actionEl.focus()
       break
   }
+  await sleep(actionState.wait)
 }
 
 async function resetMouseAndFocus(page) {
@@ -130,6 +131,10 @@ async function goToHashUrl (page, url) {
   return page.evaluate(url => {
     window.location.href = url
   }, url)
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = {
