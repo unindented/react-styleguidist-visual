@@ -72,7 +72,7 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
         await takeNewScreenshotOfPreview(page, preview, previewIndex, actionState, { dir })
         previewIndex += 1
       }
-
+      await resetMouseAndFocus(page)
       progressIndex += 1
     }
   }
@@ -91,7 +91,6 @@ async function takeNewScreenshotOfPreview (page, preview, index, actionState, { 
 
   debug('Storing screenshot of %s in %s', chalk.blue(name), chalk.cyan(relativePath))
   await page.screenshot({ clip: boundingBox, path: relativePath })
-  await resetMouseAndFocus(page)
 }
 
 async function triggerAction(page, el, actionState) {
