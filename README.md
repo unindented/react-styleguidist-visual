@@ -47,10 +47,14 @@ You can capture screenshots after simulating an action, by providing a JSON.stri
   <button classNames='my-button' />
 ```
 
-Available actions are `none`, `hover`, `focus`, `click` and `mouseDown`.
-`none` captures the component without performing an action.
+Available actions are `none`, `hover`, `focus`, `click`, `mouseDown` and `keyPress`.
 
-`wait` is an optional time in ms to wait between performing the action and snapping the screenshot.
+`none` - captures the component without performing an action.
+
+`keyPress` - use `selector` to specify the [key](https://github.com/GoogleChrome/puppeteer/blob/v1.4.0/lib/USKeyboardLayout.js).
+
+`wait` - an optional time in ms to wait between performing the action and snapping the screenshot.
+
 
 ### Debugging
 

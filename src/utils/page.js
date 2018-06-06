@@ -110,6 +110,10 @@ async function triggerAction(page, el, actionState) {
     case 'focus':
       await actionEl.focus()
       break
+    case 'keyPress':
+      const key = actionState.selector || 'a'
+      await page.keyboard.press(key)
+      break
   }
   await sleep(actionState.wait)
 }
