@@ -95,7 +95,7 @@ async function takeNewScreenshotOfPreview (page, preview, index, actionState, { 
 }
 
 async function triggerAction(page, el, actionState) {
-  const actionEl = await (actionState.selector ? el.$(actionState.selector) : el)
+  const actionEl = actionState.selector ? await el.$(actionState.selector) || await page.$(actionState.selector) : el
   switch(actionState.action) {
     case 'hover':
       await actionEl.hover()
