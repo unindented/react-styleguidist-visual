@@ -79,18 +79,24 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
 }
 
 async function takeNewScreenshotOfPreview (page, preview, index, actionState, { dir }) {
-  const { name, description = `${index}`, actionSelector, viewport } = preview
-  const actionStateForFilename = actionState.action === 'none' ? ' ' : ` ${actionState.action} `
-  const basename = `${name} ${description.toLowerCase()}${actionStateForFilename}${viewport.toLowerCase()}`.replace(/[^0-9A-Z]+/gi, '_')
-  const relativePath = path.join(dir, `${basename}.new.png`)
-
   const el = await page.$('[data-preview]')
   const boundingBox = await el.boundingBox()
 
   await triggerAction(page, el, actionState)
 
-  debug('Storing screenshot of %s in %s', chalk.blue(name), chalk.cyan(relativePath))
-  await page.screenshot({ clip: boundingBox, path: relativePath })
+  const path = await getRelativeFilepath(preview, index, actionState, dir)
+  debug('Storing screenshot of %s in %s', chalk.blue(preview.name), chalk.cyan(path))
+  await page.screenshot({ clip: boundingBox, path })
+}
+
+async function getRelativeFilepath(preview, index, actionState, dir) {
+  const { name, description = `${index}`, actionSelector, viewport } = preview
+  const { action = '', key = '' } = actionState
+  const actionName = action === 'none' ? '' : action
+  const baseName = name + ` ${description} ${actionName} ${key} ${viewport}`.toLowerCase()
+  const underscoredName = baseName.replace(/[^0-9A-Z]+/gi, '_')
+
+  return path.join(dir, `${underscoredName}.new.png`)
 }
 
 async function triggerAction(page, el, actionState) {
@@ -111,7 +117,7 @@ async function triggerAction(page, el, actionState) {
       await actionEl.focus()
       break
     case 'keyPress':
-      const key = actionState.selector || 'a'
+      const key = actionState.key || 'a'
       await page.keyboard.press(key)
       break
   }
