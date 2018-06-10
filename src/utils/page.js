@@ -61,14 +61,14 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
     let previewIndex = 1
 
     for (const preview of previewList) {
-      const actionStateList = preview.actionStates ? JSON.parse(preview.actionStates) : [{ action: 'none'}]
+      const actionStateList = preview.actionStates ? JSON.parse(preview.actionStates) : [{ action: 'none' }]
 
       progress.update(progressIndex, progressTotal)
 
       const { url } = preview
       await goToHashUrl(page, url)
 
-      for(const actionState of actionStateList) {
+      for (const actionState of actionStateList) {
         await takeNewScreenshotOfPreview(page, preview, previewIndex, actionState, { dir })
         previewIndex += 1
       }
@@ -89,8 +89,8 @@ async function takeNewScreenshotOfPreview (page, preview, index, actionState, { 
   await page.screenshot({ clip: boundingBox, path })
 }
 
-async function getRelativeFilepath(preview, index, actionState, dir) {
-  const { name, description = `${index}`, actionSelector, viewport } = preview
+async function getRelativeFilepath (preview, index, actionState, dir) {
+  const { name, description = `${index}`, viewport } = preview
   const { action = '', key = '' } = actionState
   const actionName = action === 'none' ? '' : action
   const baseName = name + ` ${description} ${actionName} ${key} ${viewport}`.toLowerCase()
@@ -99,9 +99,9 @@ async function getRelativeFilepath(preview, index, actionState, dir) {
   return path.join(dir, `${underscoredName}.new.png`)
 }
 
-async function triggerAction(page, el, actionState) {
+async function triggerAction (page, el, actionState) {
   const actionEl = actionState.selector ? await el.$(actionState.selector) || await page.$(actionState.selector) : el
-  switch(actionState.action) {
+  switch (actionState.action) {
     case 'hover':
       await actionEl.hover()
       break
@@ -124,10 +124,10 @@ async function triggerAction(page, el, actionState) {
   await sleep(actionState.wait)
 }
 
-async function resetMouseAndFocus(page) {
+async function resetMouseAndFocus (page) {
   await page.focus('body')
   await page.mouse.up()
-  await page.mouse.move(0,0)
+  await page.mouse.move(0, 0)
 }
 
 async function goToUrl (page, url, navigationOptions) {
@@ -142,8 +142,8 @@ async function goToHashUrl (page, url) {
   }, url)
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function sleep (ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 module.exports = {
