@@ -5,3 +5,11 @@ node_js:
 cache:
   directories:
     - node_modules
+
+deploy:
+  provider: npm
+  email: unindented@gmail.com
+  api_key:
+    secure: Z9Gw3V5YzYQSzEmau6MN/Co+jXTY2lfyfpsrkXLRYfdJXZ+6Bae/gkJipOwJbEluW/fAp1xlxZaQo/bmabtc1buednAQq5nu5ElQac7OO90tcWAk8kUM6I1l6S1ZlnJXknHCO9dGFAGhd611sLLPbo2Z46UhyhHrQIFuqf4AKy9xpGeXUfYZu5vjO7FHRAT4Mhqa1bR45Z49vRrtMEj4WB7KsKKkAYH54OTcpvRLEKjaUy/019UL5bX3FAjD0T8rUzyUkharTpXVRa6KHoJkIXOFuwHmQl2wQ5WwoDAgrZgqNZ0YpKVDCo1WdO8JREMsL83DkoESG+H+swnnNCBgDbCEVzYNpNnIB4DdmoGjRXNfTv8oGdd878WWMzhMXza8LqLg9gLgDhVRVXAeRdokX3+9KwBgLffgmVuWJUXujh/6yOCc0fGQ1bODE747Gu9Nc5O6krhtwS7lFZzc4LwAFyaI6Z0hIU3AdOm0SvZnX2Rw/SrzWNZkz5JSSoSHySJKgVtkIY65mXaknEnunZlN9MKQc+Ba9v8BsMsYc6LOku3rZ8f2X9FpIjMfUfvyqTVnY/iTqmSmf79xTB62Cf9Zg6X/yXaJ1IatFNDeKjeUM54XYBqeaEdqi7JImLDQ9aEDEKte4GQe4+bAe3QDjY6LxJWpk/Ti5HuND0u8QZ7nbQM=
+  on:
+    tags: true
