@@ -49,7 +49,7 @@ function getPreviewsInPage ({ filter, viewport }) {
   return Array.prototype.reduce.call(result, extractPreviewInfo, {})
 }
 
-async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, navigationOptions }) {
+async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, navigationOptions, wait }) {
   await ensureDir(dir)
 
   let progressIndex = 1
@@ -69,7 +69,7 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
       await goToHashUrl(page, url)
 
       for (const actionState of actionStateList) {
-        await takeNewScreenshotOfPreview(page, preview, previewIndex, actionState, { dir })
+        await takeNewScreenshotOfPreview(page, preview, previewIndex, actionState, { dir, wait })
         previewIndex += 1
       }
       await resetMouseAndFocus(page)
@@ -78,8 +78,13 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
   }
 }
 
-async function takeNewScreenshotOfPreview (page, preview, index, actionState, { dir }) {
+async function takeNewScreenshotOfPreview (page, preview, index, actionState, { dir, wait }) {
   const el = await page.$('[data-preview]')
+
+  if (wait) {
+    await sleep(wait)
+  }
+
   const boundingBox = await el.boundingBox()
 
   await triggerAction(page, el, actionState)
