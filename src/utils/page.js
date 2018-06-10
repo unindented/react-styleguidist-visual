@@ -78,7 +78,7 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
   }
 }
 
-async function takeNewScreenshotOfPreview (page, preview, index, actionState, { dir, delay: wait }) {
+async function takeNewScreenshotOfPreview (page, preview, index, actionState, { dir, wait }) {
   const el = await page.$('[data-preview]')
 
   if (wait) {
