@@ -1,7 +1,7 @@
 {
   "name": "react-styleguidist-visual",
   "description": "Automated visual testing for React Styleguidist, using Puppeteer and pixelmatch.",
-  "version": "0.6.4",
+  "version": "0.6.6",
   "license": "MIT",
   "author": {
     "name": "Daniel Perez Alvarez",
@@ -24,11 +24,11 @@
     "debug": "^3.1.0",
     "fs-extra": "^6.0.1",
     "glob": "^7.1.2",
-    "joi": "^13.3.0",
+    "joi": "^13.4.0",
     "ora": "^2.1.0",
     "pixelmatch": "^4.0.2",
     "pngjs": "^3.3.3",
-    "puppeteer": "^1.4.0",
+    "puppeteer": "^1.5.0",
     "term-img": "^2.1.0",
     "yargs": "^11.0.0"
   },
@@ -37,7 +37,7 @@
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.12.0",
     "eslint-plugin-node": "^6.0.1",
-    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-promise": "^3.8.0",
     "eslint-plugin-standard": "^3.1.0"
   }
 }

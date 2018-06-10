@@ -97,7 +97,7 @@ async function diffScreenshots (img1, img2, output, threshold = 0.001) {
   const pixels =
     pixelmatch(data1.data, data2.data, diff.data, data1.width, data1.height, {
       threshold
-    }) || Math.abs(data1.data.length - data2.data.length);
+    }) || Math.abs(data1.data.length - data2.data.length)
 
   debug('Screenshots %s and %s differ in %s pixels', chalk.cyan(img1), chalk.cyan(img2), chalk.red(pixels))
 
