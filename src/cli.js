@@ -32,6 +32,10 @@ function testArgs (yargs) {
       type: 'number',
       description: 'Threshold for visual diffing'
     })
+    .option('wait', {
+      type: 'number',
+      description: 'Delay before taking screenshot (in milliseconds)'
+    })
     .demandOption(['url'])
     .config('config', configParser)
     .example(
