@@ -29,6 +29,7 @@ function getPreviewsInPage ({ filter, viewport }) {
     const name = el.dataset.preview
     const description = el.dataset.description
     const actionStates = el.dataset.actionStates
+    const previewSelector = el.dataset.previewSelector
 
     if (!shouldIncludePreview(name)) {
       return memo
@@ -39,7 +40,8 @@ function getPreviewsInPage ({ filter, viewport }) {
       name,
       description,
       actionStates,
-      viewport
+      viewport,
+      previewSelector
     })
 
     return memo
@@ -85,9 +87,10 @@ async function takeNewScreenshotOfPreview (page, preview, index, actionState, { 
     await sleep(wait)
   }
 
-  const boundingBox = await el.boundingBox()
-
   await triggerAction(page, el, actionState)
+
+  const boundingBoxEl = preview.previewSelector ? await page.$(preview.previewSelector) : el
+  const boundingBox = await boundingBoxEl.boundingBox()
 
   const path = await getRelativeFilepath(preview, index, actionState, dir)
   debug('Storing screenshot of %s in %s', chalk.blue(preview.name), chalk.cyan(path))
