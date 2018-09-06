@@ -20,7 +20,8 @@ Point the tool to your styleguide:
 $ npx styleguidist-visual test --url "https://react-styleguidist.js.org/examples/basic/"
 ```
 
-You can also test against your local styleguide without having to deploy it first to a server.
+You can also test against your local style guide.
+The following command will first build the style guide and then run the visual test.
 
 ```
 $ npx styleguidist build && styleguidist-visual test --url \"file://$(pwd)/styleguide/index.html\"
@@ -49,7 +50,7 @@ $ npx styleguidist-visual approve --help
 You can capture screenshots after simulating an action, by providing a `JSON.stringify`ed list of actions as props to the component wrapper like this:
 
 ````md
-```js { "props": { "data-action-states": "[{"action":"none"},{"action":"hover","selector":".my-button","wait":"1000"},{"action":"focus","selector":".my-button"},{"action":"keyPress","key":"Tab"}]" } }
+```js { "props": { "data-action-states": "[{\"action\":\"none\"},{\"action\":\"hover\",\"selector\":\".my-button\",\"wait\":\"1000\"},{\"action\":\"focus\",\"selector\":\".my-button\"},{\"action\":\"keyPress\",\"key\":\"Tab\"}]" } }
 <Button className="my-button" />
 ```
 ````
