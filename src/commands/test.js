@@ -20,6 +20,7 @@ const testSchema = joi
       .number()
       .min(0)
       .max(1),
+    wait: joi.number(),
     viewports: joi.object().pattern(
       /^.+$/,
       joi.object().keys({
@@ -51,6 +52,7 @@ const testDefaults = {
   dir: 'styleguide-visual',
   filter: undefined,
   threshold: 0.001,
+  wait: 0,
   viewports: {
     desktop: {
       width: 800,
@@ -69,7 +71,7 @@ async function test (partialOptions) {
 
   try {
     const options = await getOptions(partialOptions, testDefaults, testSchema)
-    const { url, dir, filter, threshold, viewports, launchOptions, connectOptions, navigationOptions } = options
+    const { url, dir, filter, threshold, wait, viewports, launchOptions, connectOptions, navigationOptions } = options
 
     await removeNonRefScreenshots({ dir, filter })
 
@@ -79,13 +81,13 @@ async function test (partialOptions) {
     for (const viewport of Object.keys(viewports)) {
       const progress = spinner({
         start: `Taking screenshots for viewport ${viewport}`,
-        update: `Taking screenshot %s of %s for viewport ${viewport}`,
+        update: `Taking screenshot of component %s of %s for viewport ${viewport}`,
         stop: `Finished taking screenshots for viewport ${viewport}`
       })
       progress.start()
       await page.setViewport(viewports[viewport])
       const previews = await getPreviews(page, { url, filter, viewport, navigationOptions })
-      await takeNewScreenshotsOfPreviews(page, previews, { dir, progress, navigationOptions })
+      await takeNewScreenshotsOfPreviews(page, previews, { dir, progress, navigationOptions, wait })
       progress.stop()
     }
 

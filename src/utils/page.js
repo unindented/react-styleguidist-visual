@@ -28,6 +28,8 @@ function getPreviewsInPage ({ filter, viewport }) {
     const url = el.nextSibling.querySelector('a[href][title]').href
     const name = el.dataset.preview
     const description = el.dataset.description
+    const actionStates = el.dataset.actionStates
+    const previewSelector = el.dataset.previewSelector
 
     if (!shouldIncludePreview(name)) {
       return memo
@@ -37,8 +39,11 @@ function getPreviewsInPage ({ filter, viewport }) {
       url,
       name,
       description,
-      viewport
+      actionStates,
+      viewport,
+      previewSelector
     })
+
     return memo
   }
 
@@ -46,7 +51,7 @@ function getPreviewsInPage ({ filter, viewport }) {
   return Array.prototype.reduce.call(result, extractPreviewInfo, {})
 }
 
-async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, navigationOptions }) {
+async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, navigationOptions, wait }) {
   await ensureDir(dir)
 
   let progressIndex = 1
@@ -58,31 +63,79 @@ async function takeNewScreenshotsOfPreviews (page, previewMap, { dir, progress, 
     let previewIndex = 1
 
     for (const preview of previewList) {
+      const actionStateList = preview.actionStates ? JSON.parse(preview.actionStates) : [{ action: 'none' }]
+
       progress.update(progressIndex, progressTotal)
 
       const { url } = preview
       await goToHashUrl(page, url)
-      await takeNewScreenshotOfPreview(page, preview, previewIndex, { dir })
 
-      previewIndex += 1
+      for (const actionState of actionStateList) {
+        await takeNewScreenshotOfPreview(page, preview, previewIndex, actionState, { dir, wait })
+        previewIndex += 1
+      }
+      await resetMouseAndFocus(page)
       progressIndex += 1
     }
   }
 }
 
-async function takeNewScreenshotOfPreview (page, preview, index, { dir }) {
+async function takeNewScreenshotOfPreview (page, preview, index, actionState, { dir, wait }) {
+  const el = await page.$('[data-preview]')
+
+  if (wait) {
+    await sleep(wait)
+  }
+
+  await triggerAction(page, el, actionState)
+
+  const boundingBoxEl = preview.previewSelector ? await page.$(preview.previewSelector) : el
+  const boundingBox = await boundingBoxEl.boundingBox()
+
+  const path = await getRelativeFilepath(preview, index, actionState, dir)
+  debug('Storing screenshot of %s in %s', chalk.blue(preview.name), chalk.cyan(path))
+  await page.screenshot({ clip: boundingBox, path })
+}
+
+async function getRelativeFilepath (preview, index, actionState, dir) {
   const { name, description = `${index}`, viewport } = preview
-  const basename = `${name} ${description.toLowerCase()} ${viewport.toLowerCase()}`.replace(/[^0-9A-Z]+/gi, '_')
-  const relativePath = path.join(dir, `${basename}.new.png`)
+  const { action = '', key = '' } = actionState
+  const actionName = action === 'none' ? '' : action
+  const baseName = name + ` ${description} ${actionName} ${key} ${viewport}`.toLowerCase()
+  const underscoredName = baseName.replace(/[^0-9A-Z]+/gi, '_')
 
-  const clip = await page.evaluate(() => {
-    const el = document.querySelector('[data-preview]')
-    const { x, y, width, height } = el.getBoundingClientRect()
-    return { x, y, width, height }
-  })
+  return path.join(dir, `${underscoredName}.new.png`)
+}
 
-  debug('Storing screenshot of %s in %s', chalk.blue(name), chalk.cyan(relativePath))
-  await page.screenshot({ clip, path: relativePath })
+async function triggerAction (page, el, actionState) {
+  const actionEl = actionState.selector ? await el.$(actionState.selector) || await page.$(actionState.selector) : el
+  switch (actionState.action) {
+    case 'hover':
+      await actionEl.hover()
+      break
+    case 'click':
+      await actionEl.click()
+      break
+    case 'mouseDown':
+      const box = await actionEl.boundingBox()
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await page.mouse.down()
+      break
+    case 'focus':
+      await actionEl.focus()
+      break
+    case 'keyPress':
+      const key = actionState.key || 'a'
+      await page.keyboard.press(key)
+      break
+  }
+  await sleep(actionState.wait)
+}
+
+async function resetMouseAndFocus (page) {
+  await page.focus('body')
+  await page.mouse.up()
+  await page.mouse.move(0, 0)
 }
 
 async function goToUrl (page, url, navigationOptions) {
@@ -95,6 +148,10 @@ async function goToHashUrl (page, url) {
   return page.evaluate(url => {
     window.location.href = url
   }, url)
+}
+
+function sleep (ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 module.exports = {
