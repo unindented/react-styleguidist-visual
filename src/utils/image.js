@@ -13,8 +13,15 @@ const pathExists = promisify(fs.pathExists)
 const remove = promisify(fs.remove)
 const glob = promisify(globby)
 
+function filterFiles (filter) {
+  if (!filter) { return array => array }
+  const filterRegex = new RegExp(filter)
+  return array => array.filter(value => filterRegex.test(value))
+}
+
 async function checkForStaleRefScreenshots ({ dir, filter }) {
-  const refImgs = await glob(path.join(dir, `${filter || ''}*.png`), {
+  const refImgs = filterFiles(filter)(await glob(path.join(dir, `*.new.png`)))
+  await glob(path.join(dir, `${filter || ''}*.png`), {
     ignore: path.join(dir, `${filter || ''}*.{diff,new}.png`)
   })
 
@@ -36,7 +43,7 @@ async function checkForStaleRefScreenshots ({ dir, filter }) {
 }
 
 async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }) {
-  const newImgs = await glob(path.join(dir, `${filter || ''}*.new.png`))
+  const newImgs = filterFiles(filter)(await glob(path.join(dir, `*.new.png`)))
 
   let diffCount = 0
 
@@ -69,7 +76,7 @@ async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }
 }
 
 async function promoteNewScreenshots ({ dir, filter }) {
-  const newImgs = await glob(path.join(dir, `${filter || ''}*.new.png`))
+  const newImgs = filterFiles(filter)(await glob(path.join(dir, `*.new.png`)))
   const oldDiffs = await glob(path.join(dir, `${filter || ''}*.diff.png`))
 
   for (const newImg of newImgs) {
