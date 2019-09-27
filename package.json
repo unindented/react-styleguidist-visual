@@ -1,7 +1,7 @@
 {
   "name": "react-styleguidist-visual",
   "description": "Automated visual testing for React Styleguidist, using Puppeteer and pixelmatch.",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "license": "MIT",
   "author": {
     "name": "Daniel Perez Alvarez",
