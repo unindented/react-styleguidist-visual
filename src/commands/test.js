@@ -52,6 +52,7 @@ const testDefaults = {
   dir: 'styleguide-visual',
   filter: undefined,
   threshold: 0.001,
+  deleteScreenshotsWhenAccepted: false,
   wait: 0,
   viewports: {
     desktop: {
@@ -71,7 +72,7 @@ async function test (partialOptions) {
 
   try {
     const options = await getOptions(partialOptions, testDefaults, testSchema)
-    const { url, dir, filter, threshold, wait, viewports, launchOptions, connectOptions, navigationOptions } = options
+    const { url, dir, filter, threshold, wait, viewports, launchOptions, connectOptions, navigationOptions, deleteScreenshotsWhenAccepted } = options
 
     await removeNonRefScreenshots({ dir, filter })
 
@@ -92,7 +93,7 @@ async function test (partialOptions) {
     }
 
     await checkForStaleRefScreenshots({ dir, filter })
-    await compareNewScreenshotsToRefScreenshots({ dir, filter, threshold })
+    await compareNewScreenshotsToRefScreenshots({ dir, filter, threshold, deleteScreenshotsWhenAccepted })
   } catch (err) {
     debug(err)
     throw err

@@ -35,7 +35,7 @@ async function checkForStaleRefScreenshots ({ dir, filter }) {
   }
 }
 
-async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }) {
+async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold, deleteScreenshotsWhenAccepted }) {
   const newImgs = await glob(path.join(dir, `${filter || ''}*.new.png`))
 
   let diffCount = 0
@@ -51,6 +51,10 @@ async function compareNewScreenshotsToRefScreenshots ({ dir, filter, threshold }
       const pixels = await diffScreenshots(newImg, refImg, diffImg, threshold)
       if (pixels === 0) {
         success('Screenshots %s and %s match', chalk.cyan(newImg), chalk.cyan(refImg))
+        if (deleteScreenshotsWhenAccepted) {
+          await remove(newImg)
+          await remove(diffImg)
+        }
       } else {
         failure('Screenshots %s and %s differ in %s pixels', chalk.cyan(newImg), chalk.cyan(refImg), chalk.red(pixels))
         termImg(diffImg, {
